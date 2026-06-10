@@ -1,0 +1,473 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Летопись успеха — Гимназия №1 имени Алихана Бокейханова</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #1e2530;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            color: #333;
+        }
+
+        /* Панель управления звуком */
+        .audio-control-panel {
+            margin-bottom: 20px;
+            background: rgba(27, 54, 93, 0.95);
+            padding: 12px 25px;
+            border-radius: 30px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            z-index: 100;
+        }
+
+        .audio-btn {
+            background: #d4af37;
+            border: none;
+            color: #1b365d;
+            padding: 8px 18px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .audio-btn:hover {
+            background: #fff;
+            transform: scale(1.05);
+        }
+
+        .audio-btn.active {
+            background: #22c55e;
+            color: white;
+        }
+
+        .audio-btn.muted {
+            background: #ef4444;
+            color: white;
+        }
+
+        /* Контейнер флипбука со строго фиксированным центром */
+        .book-container {
+            position: relative;
+            width: 900px;
+            height: 550px;
+            perspective: 1500px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .book {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+        }
+
+        /* Стили для листов */
+        .page-sheet {
+            position: absolute;
+            width: 450px;
+            height: 100%;
+            top: 0;
+            right: 0;
+            transform-style: preserve-3d;
+            transform-origin: left center;
+            transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        /* Слоевая структура (Z-Index) */
+        .page-sheet:nth-child(1) { z-index: 5; }
+        .page-sheet:nth-child(2) { z-index: 4; }
+        .page-sheet:nth-child(3) { z-index: 3; }
+        .page-sheet:nth-child(4) { z-index: 2; }
+        .page-sheet:nth-child(5) { z-index: 1; }
+
+        .page-sheet.flipped {
+            transform: rotateY(-180deg);
+        }
+
+        .page-sheet.flipped:nth-child(1) { z-index: 1; }
+        .page-sheet.flipped:nth-child(2) { z-index: 2; }
+        .page-sheet.flipped:nth-child(3) { z-index: 3; }
+        .page-sheet.flipped:nth-child(4) { z-index: 4; }
+        .page-sheet.flipped:nth-child(5) { z-index: 5; }
+
+        /* Стороны страницы */
+        .page-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            background: #fdfbf7;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: inset 3px 0 10px rgba(0,0,0,0.05);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .page-face.back {
+            transform: rotateY(180deg);
+            box-shadow: inset -3px 0 10px rgba(0,0,0,0.05);
+        }
+
+        /* Дизайн обложек */
+        .cover-front {
+            background: linear-gradient(135deg, #1b365d 0%, #0b1d3a 100%);
+            color: #fff;
+            border-radius: 0 8px 8px 0;
+            border-left: 4px solid #d4af37;
+        }
+
+        .cover-back {
+            background: linear-gradient(135deg, #0b1d3a 0%, #1b365d 100%);
+            color: #fff;
+            border-radius: 8px 0 0 8px;
+            border-right: 4px solid #d4af37;
+        }
+
+        .page-face.front:not(.cover-front) { border-radius: 0 6px 6px 0; border-left: 1px solid rgba(0,0,0,0.1); }
+        .page-face.back:not(.cover-back) { border-radius: 6px 0 0 6px; border-right: 1px solid rgba(0,0,0,0.1); }
+
+        .content-wrapper {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        h1 {
+            font-size: 26px;
+            line-height: 1.3;
+            margin-bottom: 15px;
+            color: #d4af37;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        h2 {
+            font-size: 22px;
+            color: #1b365d;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #e5bc3d;
+            padding-bottom: 5px;
+        }
+
+        h3 {
+            font-size: 15px;
+            color: #777;
+            font-style: italic;
+            margin-bottom: 15px;
+        }
+
+        p {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #444;
+            margin-bottom: 12px;
+            text-align: justify;
+        }
+
+        .cover-front p, .cover-back p { color: #ddd; }
+        ul { margin-left: 20px; margin-bottom: 15px; }
+        li { font-size: 13px; line-height: 1.5; color: #555; margin-bottom: 6px; }
+
+        .photo-container {
+            width: 100%;
+            height: 170px;
+            margin: 5px 0;
+            border: 3px solid #f0f0f0;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            background-color: #eaeaea;
+            overflow: hidden;
+            border-radius: 4px;
+        }
+
+        .photo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            object-position: center top;
+        }
+
+        .footer-page {
+            font-size: 11px;
+            color: #999;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+            margin-top: auto;
+        }
+
+        .cover-front .footer-page, .cover-back .footer-page { border-top: 1px solid rgba(255,255,255,0.1); color: #8a9bb4; }
+        .nav-hint { position: absolute; bottom: -40px; left: 0; width: 100%; text-align: center; color: #8a9bb4; font-size: 13px; }
+    </style>
+</head>
+<body>
+
+    <div class="audio-control-panel">
+        <button id="toggle-music-btn" class="audio-btn">🎵 Фоновая мелодия: ВЫКЛ</button>
+        <button id="toggle-speaker-btn" class="audio-btn active">🔊 Голосовой Гид: ВКЛ</button>
+    </div>
+
+    <audio id="bg-music" loop>
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="book-container">
+        <div class="book" id="flipbook">
+
+            <div class="page-sheet" id="sheet1">
+                <div class="page-face front cover-front">
+                    <div class="content-wrapper" style="justify-content: center; text-align: center;">
+                        <span style="font-size: 40px; margin-bottom: 20px;">📖</span>
+                        <h1>Гимназия №1<br>имени Алихана Бокейханова</h1>
+                        <h3 style="color: #d4af37; margin-top: 5px;">Жамбылская область, г. Тараз</h3>
+                        <p style="margin-top: 25px; font-size: 15px;">Летопись успеха и гордости</p>  <p style="margin-top: 25px; font-size: 10px;">Интерактивное издание</p>
+                    </div>
+                    <div class="footer-page"><span>Тараз, 2026</span><span>Начало</span></div>
+                </div>
+                <div class="page-face back" data-speak="Наследие Алаша. Духовный фундамент гимназии. Имя Алихана Бокейханова — выдающегося общественного деятеля, преподавателя и лидера движения Алаш — присвоено нашей гимназии как символ стремления к академическому превосходству, национальной идентичности и свободе научной мысли.">
+                    <div class="content-wrapper">
+                        <h2>Наследие Алаша</h2>
+                        <h3>Духовный фундамент гимназии</h3>
+                        <div class="photo-container"><img src="alihan.png" alt="Алихан Бокейханов"></div>
+                        <p style="font-style: italic; background: #f9f5eb; padding: 15px; border-left: 3px solid #1b365d; margin-top: 15px;">
+                            "Имя Алихана Бокейханова — символ просвещения, исторической справедливости и непреклонного стремления к свободе духа."
+                        </p>
+                        <p style="margin-top: 15px;">Гимназия с гордостью носит имя лидера движения «Алаш», транслируя подрастающему поколению непреходящие ценности служения обществу, патриотизма и академического лидерства.</p>
+                    </div>
+                    <div class="footer-page"><span>Страница 1</span></div>
+                </div>
+            </div>
+
+            <div class="page-sheet" id="sheet2">
+                <div class="page-face front" data-speak="Бауыржан Момышулы. Легендарный выпускник двадцатых годов. Великий сын казахского народа, Герой Советского Союза, легендарный панфиловец и писатель. Его славный путь защитника и автора бессмертных произведений брал свое начало в стенах нашей школы.">
+                    <div class="content-wrapper">
+                        <h2>Бауыржан Момышулы</h2>
+                        <h3>Легендарный выпускник 20-х годов</h3>
+                        <div class="photo-container"><img src="momyshuly.png" alt="Бауыржан Момышулы"></div>
+                        <p>Выдающийся военачальник, панфиловец, Герой Советского Союза и знаменитый писатель. Его путь к бессмертной славе начинался в стенах нашей школы.</p>
+                        <ul>
+                            <li><strong>1941-1945 гг:</strong> Активный участник знаковых сражений.</li>
+                            <li><strong>1991 год:</strong> Присвоено звание Героя (посмертно).</li>
+                        </ul>
+                    </div>
+                    <div class="footer-page"><span>Страница 2</span></div>
+                </div>
+                <div class="page-face back" data-speak="Николай Лященко. Генерал армии и Герой. Лященко Николай Григорьевич — еще одна легендарная историческая веха гимназии. Прошел путь от обычного курсанта до генерала армии. В тысяча девятьсот девяностом году за проявленное мужество на фронтах Великой Отечественной войны удостоен звания Героя Советского Союза.">
+                    <div class="content-wrapper">
+                        <h2>Николай Лященко</h2>
+                        <h3>Генерал армии и Герой</h3>
+                        <div class="photo-container"><img src="lyashenko.png" alt="Николай Лященко"></div>
+                        <p>Его жизненный и боевой путь служат для гимназистов примером высочайшего профессионализма и верности долгу.</p>
+                        <p style="font-size: 13px; color: #555;">В 1990 году удостоен звания Героя. Его мемуары «Годы в шинели» бережно хранятся в музее.</p>
+                    </div>
+                    <div class="footer-page"><span>Страница 3</span></div>
+                </div>
+            </div>
+
+            <div class="page-sheet" id="sheet3">
+                <div class="page-face front" data-speak="Столпы просвещения. Выпускники, которыми гордится страна. Юрий Киселев, выпуск сорок седьмого года, доктор исторических наук, профессор. Александр Савченко, выпуск шестьдесят восьмого года, Депутат Сената Парламента Республики Казахстан. Еркенбек Кульджабаев, выпуск эм-пятьдесят пятого года, вице-президент Инженерной академии.">
+                    <div class="content-wrapper">
+                        <h2>Столпы науки</h2>
+                        <h3>Выпускники, сформировавшие академическую славу</h3>
+                        <p><strong>Юрий Киселев (Выпуск 1947 г.):</strong> Доктор исторических наук, профессор. Заслуженный деятель и отличник просвещения КазССР.</p>
+                        <p><strong>Александр Савченко (Выпуск 1968 г.):</strong> Прошел масштабный путь от рабочего до Депутата Сената Парламента РК. Награжден орденом «Курмет».</p>
+                        <p><strong>Еркенбек Кульджабаев (Выпуск 1955 г.):</strong> Крупный ученый-производственник, вице-президент Инженерной академии РК.</p>
+                    </div>
+                    <div class="footer-page"><span>Страница 4</span></div>
+                </div>
+                <div class="page-face back" data-speak="Серик Конакбаев. Мировая легенда бокса. В тысяча девятьсот seventy годах в школе учился ярчайший мастер кожаной перчатки — Серик Конакбаев, доказавший, что наши ученики сильны как интеллектом, так и духом. Серебряный призер Летней Олимпиады восемьдесят в Москве.">
+                    <div class="content-wrapper">
+                        <h2>Серик Конакбаев</h2>
+                        <h3>Мировая легенда бокса на школьной скамье</h3>
+                        <div class="photo-container"><img src="konakbayev.png" alt="Серик Конакбаев"></div>
+                        <ul>
+                            <li>Серебряный призер Олимпийских игр 1980 года в Москве.</li>
+                            <li>Двукратный обладатель Кубка мира (1979, 1981).</li>
+                            <li>Двукратный чемпион Европы. Заслуженный мастер спорта СССР.</li>
+                        </ul>
+                    </div>
+                    <div class="footer-page"><span>Страница 5</span></div>
+                </div>
+            </div>
+
+            <div class="page-sheet" id="sheet4">
+                <div class="page-face front" data-speak="Раушан Буркитбаева-Нукенова. Поэтическое слово кочевой души. Выпускница семьдесят третьего года Раушан Буркитбаева-Нукенова — выдающийся поэт, писатель, Заслуженный деятель Казахстана. Ее философские сборники переведены на многие языки мира и изданы в Лондоне и Париже.">
+                    <div class="content-wrapper">
+                        <h2>Раушан Буркитбаева-Нукенова</h2>
+                        <h3>Поэтическое слово, признанное в мире</h3>
+                        <div class="photo-container" style="height: 130px;"><img src="burkitbaeva.png" alt="Раушан Буркитбаева-Нукенова"></div>
+                        <p>Выпускница 1973 года. Заслуженный деятель Казахстана. Ее сборники изданы в Лондоне и Париже. Произведения включены в школьные хрестоматии:</p>
+                        <p style="font-size: 12px; font-style: italic; color:#666; text-align:center;">«Полынный ветер» • «Кочевые просторы души»</p>
+                    </div>
+                    <div class="footer-page"><span>Страница 6</span></div>
+                </div>
+                <div class="page-face back" data-speak="Богдан Загрибельный. Якутский бриллиант гимназии. Выпускник две тысячи тринадцатого года продемонстрировал абсолютное первое место на Международной олимпиаде Туймаада по химии в Якутске. Жюри вручило ему эксклюзивный ювелирный приз — настоящий чистейший якутский бриллиант.">
+                    <div class="content-wrapper">
+                        <h2>Богдан Загрибельный</h2>
+                        <h3>Триумф интеллекта и признание</h3>
+                        <div class="photo-container" style="height: 130px;"><img src="bogdan.png" alt="Богдан Загрибельный"></div>
+                        <p>Выпускник 2013 года. Победитель престижной Международной олимпиады школьников «Туймаада» по химии.</p>
+                        <p>Завоевал абсолютное первое место, получив эксклюзивный приз — настоящий якутский бриллиант за идеальное решение сложнейших задач. Ныне — кандидат химических наук.</p>
+                    </div>
+                    <div class="footer-page"><span>Страница 7</span></div>
+                </div>
+            </div>
+
+            <div class="page-sheet" id="sheet5">
+                <div class="page-face front" data-speak="Будущее за нами. Гимназия номер один имени Алихана Бокейханова продолжает уверенно занимать первые строчки в рейтинге лучших учебных заведений области, сохраняя наследие и открывая новые горизонты науки.">
+                    <div class="content-wrapper">
+                        <h2>Летопись продолжается</h2>
+                        <h3>Будущее строится сегодня</h3>
+                        <p>Гимназия №1 имени Алихана Бокейханова — это неразрывный сплав великой истории, традиций и инновационного будущего.</p>
+                        <p style="margin-top: 15px; font-weight: bold; color: #1b365d;">Контакты учебного заведения:</p>
+                        <p style="font-size: 13px;">💻 Веб-сайт: <a href="http://1-taraz.mektebi.kz" target="_blank" style="color: #1b365d;">1-taraz.mektebi.kz</a><br>📞 Телефон: +7 (7262) 43-17-01</p>
+                    </div>
+                    <div class="footer-page"><span>Страница 8</span></div>
+                </div>
+                <div class="page-face back cover-back">
+                    <div class="content-wrapper" style="justify-content: center; text-align: center;">
+                        <span style="font-size: 50px; margin-bottom: 20px;">⭐</span>
+                        <h2 style="color: #d4af37; border: none;">Школа Трех Времен</h2>
+                        <p style="font-size: 13px; margin-top: 15px; padding: 0 20px;">"Мы не просто храним историю — мы используем её код для программирования будущего."</p>
+                    </div>
+                    <div class="footer-page"><span>© Гимназия №1, 2026</span><span>Конец</span></div>
+                </div>
+            </div>
+
+        </div>
+        <div class="nav-hint">Нажимайте на страницы, чтобы листать книгу вперед и назад</div>
+    </div>
+
+    <script>
+        const audio = document.getElementById('bg-music');
+        let isMusicPlaying = false;
+        let isSpeakerEnabled = true;
+
+        const toggleMusicBtn = document.getElementById('toggle-music-btn');
+        const toggleSpeakerBtn = document.getElementById('toggle-speaker-btn');
+
+        // Установка стартовой комфортной громкости трека
+        audio.volume = 0.2;
+
+        // ПУНКТ УПРАВЛЕНИЯ МУЗЫКОЙ (Оригинальная кнопка, новая логика аудиофайла)
+        toggleMusicBtn.addEventListener('click', () => {
+            if (!isMusicPlaying) {
+                audio.play().then(() => {
+                    toggleMusicBtn.textContent = "🎵 Фоновая мелодия: ВКЛ";
+                    toggleMusicBtn.classList.add('active');
+                    isMusicPlaying = true;
+                }).catch(error => {
+                    console.log("Ошибка воспроизведения аудио:", error);
+                });
+            } else {
+                audio.pause();
+                toggleMusicBtn.textContent = "🎵 Фоновая мелодия: ВЫКЛ";
+                toggleMusicBtn.classList.remove('active');
+                isMusicPlaying = false;
+            }
+        });
+
+        // ФУНКЦИЯ ОЗВУЧИВАНИЯ ТЕКСТА
+        function speakText(text) {
+            if (!isSpeakerEnabled || !text) return;
+            window.speechSynthesis.cancel(); 
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'ru-RU';
+            utterance.rate = 0.95; 
+            utterance.volume = 1.0;
+
+            // Если фоновая музыка включена, плавно приглушаем её на время чтения
+            if (isMusicPlaying) {
+                audio.volume = 0.05;
+            }
+
+            // После завершения чтения возвращаем стандартную громкость музыки назад
+            utterance.onend = () => {
+                if (isMusicPlaying) {
+                    audio.volume = 0.2;
+                }
+            };
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // ПУНКТ УПРАВЛЕНИЯ ГОЛОСОВЫМ ГИДОМ
+        toggleSpeakerBtn.addEventListener('click', () => {
+            isSpeakerEnabled = !isSpeakerEnabled;
+            if (isSpeakerEnabled) {
+                toggleSpeakerBtn.textContent = "🔊 Голосовой Гид: ВКЛ";
+                toggleSpeakerBtn.classList.add('active');
+                toggleSpeakerBtn.classList.remove('muted');
+            } else {
+                window.speechSynthesis.cancel();
+                if (isMusicPlaying) audio.volume = 0.2;
+                toggleSpeakerBtn.textContent = "🔊 Голосовой Гид: ВЫКЛ";
+                toggleSpeakerBtn.classList.remove('active');
+                toggleSpeakerBtn.classList.add('muted');
+            }
+        });
+
+        const sheets = document.querySelectorAll('.page-sheet');
+        let welcomeSpoken = false;
+        
+        function playWelcome() {
+            if (!welcomeSpoken) {
+                speakText("Добро пожаловать в интерактивную летопись гимназии номер один имени Алихана Бокейханова.");
+                welcomeSpoken = true;
+            }
+        }
+
+        document.body.addEventListener('click', () => {
+            if (!welcomeSpoken) playWelcome();
+        }, { once: true });
+
+        // МЕХАНИКА ПЕРЕЛИСТЫВАНИЯ
+        sheets.forEach((sheet, index) => {
+            const frontFace = sheet.querySelector('.page-face.front');
+            frontFace.addEventListener('click', (e) => {
+                e.stopPropagation();
+                playWelcome();
+                sheet.classList.add('flipped');
+                const backFace = sheet.querySelector('.page-face.back');
+                if (backFace && backFace.hasAttribute('data-speak')) {
+                    setTimeout(() => { speakText(backFace.getAttribute('data-speak')); }, 400);
+                }
+            });
+
+            const backFace = sheet.querySelector('.page-face.back');
+            backFace.addEventListener('click', (e) => {
+                e.stopPropagation();
+                sheet.classList.remove('flipped');
+                if (frontFace && frontFace.hasAttribute('data-speak')) {
+                    setTimeout(() => { speakText(frontFace.getAttribute('data-speak')); }, 400);
+                } else if (index === 0) {
+                    speakText("Вы вернулись на главную обложку летописи.");
+                }
+            });
+        });
+    </script>
+</body>
+</html>

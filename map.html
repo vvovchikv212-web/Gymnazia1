@@ -1,0 +1,374 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Карта летописи — Гимназия №1</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* БАЗОВЫЕ СТИЛИ */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body, html {
+            width: 100%;
+            min-height: 100%;
+            background-color: #020617;
+            font-family: 'Montserrat', sans-serif;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        /* Анимированный фон (частицы) */
+        #canvas-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* ГЛАВНЫЙ КОНТЕЙНЕР */
+        .main-content {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* ШАПКА */
+        .map-header {
+            text-align: center;
+            margin-bottom: 50px;
+            animation: fadeInDown 1s ease-out;
+        }
+
+        .header-text {
+            font-size: 12px;
+            color: #94a3b8;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .header-highlight {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(24px, 5vw, 42px);
+            color: #fbbf24;
+            text-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+        }
+
+        /* СЕТКА СТРАНИЦ / КАРТА */
+        .map-grid {
+            position: relative;
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            padding: 20px 0;
+        }
+
+        /* КАРТОЧКА МЕНЮ */
+        .map-card {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.6) 0%, rgba(30, 41, 59, 0.4) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            animation: fadeInUp 1s ease-out both;
+        }
+
+        /* Поочередное появление карточек */
+        .map-card:nth-child(1) { animation-delay: 0.1s; }
+        .map-card:nth-child(2) { animation-delay: 0.2s; }
+        .map-card:nth-child(3) { animation-delay: 0.3s; }
+        .map-card:nth-child(4) { animation-delay: 0.4s; }
+        .map-card:nth-child(5) { animation-delay: 0.5s; }
+        .map-card:nth-child(6) { animation-delay: 0.6s; }
+
+        .map-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at top right, rgba(251, 191, 36, 0.1), transparent 60%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .map-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(251, 191, 36, 0.4);
+            box-shadow: 0 15px 35px rgba(251, 191, 36, 0.1);
+        }
+
+        .map-card:hover::before {
+            opacity: 1;
+        }
+
+        /* Содержимое карточки */
+        .card-meta {
+            font-size: 11px;
+            color: #fbbf24;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .card-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 22px;
+            color: #ffffff;
+            margin-bottom: 15px;
+            line-height: 1.3;
+        }
+
+        .card-desc {
+            font-size: 13px;
+            color: #94a3b8;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            flex-grow: 1;
+        }
+
+        /* Кнопка перехода внутри карточки */
+        .card-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #020617;
+            background: #fbbf24;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            z-index: 2;
+        }
+
+        .card-btn:hover {
+            background: #ffffff;
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.2);
+        }
+
+        /* СВЕЧЕНИЕ НА ФОНЕ */
+        .bg-glow {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(30, 58, 138, 0.15) 0%, transparent 70%);
+            filter: blur(100px);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* МУЗЫКАЛЬНЫЙ ПЛЕЕР (Подсказка для звука) */
+        .audio-notice {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(15, 23, 42, 0.9);
+            padding: 10px 15px;
+            font-size: 11px;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            border-radius: 6px;
+            color: #94a3b8;
+            pointer-events: none;
+            z-index: 10;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            animation: pulseNotice 2s infinite alternate;
+        }
+
+        /* АНИМАЦИИ */
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulseNotice {
+            0% { border-color: rgba(251, 191, 36, 0.2); }
+            100% { border-color: rgba(251, 191, 36, 0.6); box-shadow: 0 5px 15px rgba(251, 191, 36, 0.1); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-glow" style="top: -200px; left: -200px;"></div>
+    <div class="bg-glow" style="bottom: -200px; right: -200px;"></div>
+
+    <canvas id="canvas-particles"></canvas>
+
+    <div class="main-content">
+        <header class="map-header">
+            <p class="header-text">Интерактивный путеводитель</p>
+            <h1 class="header-highlight">Карта цифровой летописи</h1>
+        </header>
+
+        <nav class="map-grid">
+            <article class="map-card">
+                <div>
+                    <div class="card-meta">Старт</div>
+                    <h2 class="card-title">Главное интро</h2>
+                    <p class="card-desc">Приветственный экран гимназии №1 имени Алихана Бокейханова. Торжественное видеовступление.</p>
+                </div>
+                <a href="nachalo.html" class="card-btn" onclick="delayNavigate(event, this.href)">Открыть страницу</a>
+            </article>
+
+            <article class="map-card">
+                <div>
+                    <div class="card-meta">Раздел I</div>
+                    <h2 class="card-title">Портрет школы</h2>
+                    <p class="card-desc">Описание структуры летописи, культурного наследия и роли педагогического коллектива.</p>
+                </div>
+                <a href="istoria.html" class="card-btn" onclick="delayNavigate(event, this.href)">Открыть страницу</a>
+            </article>
+
+            <article class="map-card">
+                <div>
+                    <div class="card-meta">Интерактив</div>
+                    <h2 class="card-title">Летопись успеха</h2>
+                    <p class="card-desc">Интерактивная 3D-книга с аудиогидом. Выдающиеся выпускники, история успеха и гордость гимназии.</p>
+                </div>
+                <a href="flip.html" class="card-btn" onclick="delayNavigate(event, this.href)">Листать книгу</a>
+            </article>
+
+            <article class="map-card">
+                <div>
+                    <div class="card-meta">Раздел II</div>
+                    <h2 class="card-title">Школьный музей</h2>
+                    <p class="card-desc">Страница памяти, созданная в 1965 году. Хранилище писем, документов и главных вех развития.</p>
+                </div>
+                <a href="myzei.html" class="card-btn" onclick="delayNavigate(event, this.href)">Открыть страницу</a>
+            </article>
+
+            <article class="map-card">
+                <div>
+                    <div class="card-meta">1878 Год</div>
+                    <h2 class="card-title">Становление школы</h2>
+                    <p class="card-desc">Истоки создания учебного заведения. Приказ генерал-адъютанта Фон Кауфмана.</p>
+                </div>
+                <a href="kayfman.html" class="card-btn" onclick="delayNavigate(event, this.href)">Открыть страницу</a>
+            </article>
+
+            <article class="map-card">
+                <div>
+                    <div class="card-meta">Ретро-архив</div>
+                    <h2 class="card-title">Николай Боев</h2>
+                    <p class="card-desc">Страница заслуженного учителя Узбекской ССР, инспектора училища. Доступен чат-бот «Звонок в прошлое».</p>
+                </div>
+                <a href="boev.html" class="card-btn" onclick="delayNavigate(event, this.href)">Открыть страницу</a>
+            </article>
+        </nav>
+    </div>
+
+    <div class="audio-notice" id="audioNotice">🎵 Музыка заиграет при первом клике по экрану</div>
+
+    <audio id="bg-music" loop>
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        // --- ЧАСТИЦЫ НА ФОНЕ (Код из nachalo.html с белыми частицами) ---
+        const canvas = document.getElementById('canvas-particles');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function initCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', initCanvas);
+        initCanvas();
+
+        class Particle {
+            constructor() { this.reset(); }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.4;
+                this.vy = (Math.random() - 0.5) * 0.4;
+                this.size = Math.random() * 2 + 1;
+                this.alpha = Math.random() * 0.5 + 0.2;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }
+            draw() {
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.alpha})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < 80; i++) particles.push(new Particle());
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // --- ЛОГИКА АВТОЗАПУСКА ЗВУКА (Из boev.html) ---
+        window.addEventListener('click', function() {
+            const audio = document.getElementById('bg-music');
+            const notice = document.getElementById('audioNotice');
+            
+            if (audio.paused) {
+                audio.volume = 0.2; 
+                audio.play().then(() => {
+                    notice.style.display = 'none'; 
+                }).catch(error => {
+                    console.log("Воспроизведение заблокировано:", error);
+                });
+            }
+        }, { once: true });
+
+        // --- АНИМАЦИЯ ПЕРЕХОДА МЕЖДУ СТРАНИЦАМИ ---
+        function delayNavigate(event, url) {
+            event.preventDefault();
+            const content = document.querySelector('.main-content');
+            content.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            content.style.opacity = '0';
+            content.style.transform = 'scale(0.98)';
+
+            setTimeout(() => {
+                window.location.href = url;
+            }, 500);
+        }
+    </script>
+</body>
+</html>

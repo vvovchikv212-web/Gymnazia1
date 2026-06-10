@@ -1,0 +1,334 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Боев Николай Николаевич — Память эпохи</title>
+    <style>
+        /* Анимированный фон (частицы) */
+        #canvas-particles {
+            position: fixed; /* Изменено на fixed для покрытия всего экрана */
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0; /* Задний план */
+            pointer-events: none;
+        }
+
+        /* ЦВЕТОВАЯ ПАЛИТРА И ШРИФТЫ (СОВЕТСКИЙ РЕТРО-СТИЛЬ) */
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Roboto+Slab:wght@300;400;700&display=swap');
+
+        :root {
+            --bg-color: #020617; /* Темный глубокий фон */
+            --text-color: #2b2621; /* Глубокий темно-коричневый для текста в карточке */
+            --soviet-red: #a62b2b; /* Сдержанный советский кумачовый */
+            --gold: #b8860b; /* Золотистый для элементов почета */
+            --border-style: 3px double #a62b2b;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            font-family: 'Roboto Slab', serif;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 30px;
+            border: 1px solid #d3c7a8;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            background-color: #87CEEB; /* Небесно-голубой фон карточки */
+            position: relative;
+            z-index: 2; /* Карточка поверх частиц */
+        }
+
+        /* Газетная рамка */
+        .container::before {
+            content: "";
+            position: absolute;
+            top: 10px; left: 10px; right: 10px; bottom: 10px;
+            border: 1px solid #c2b490;
+            pointer-events: none;
+        }
+
+        /* ШАПКА САЙТА */
+        header {
+            text-align: center;
+            border-bottom: var(--border-style);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .republic-tag {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--soviet-red);
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            margin: 10px 0;
+            color: var(--text-color);
+        }
+
+        .title-honor {
+            font-style: italic;
+            color: #444;
+            font-size: 1.1rem;
+            margin-top: 5px;
+        }
+
+        /* ОСНОВНОЙ БЛОК (ПОРТРЕТ И ФАКТЫ) */
+        .profile-section {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 600px) {
+            .profile-section {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+        .portrait-wrapper {
+            flex-shrink: 0;
+            border: 6px solid #fff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            background: #fff;
+            padding: 5px;
+        }
+
+        .portrait {
+            width: 220px;
+            height: auto;
+            display: block;
+            filter: sepia(0.2) contrast(1.1);
+        }
+
+        .biography-brief {
+            flex-grow: 1;
+        }
+
+        .timeline-item {
+            margin-bottom: 15px;
+            padding-left: 15px;
+            border-left: 3px solid var(--soviet-red);
+        }
+
+        .timeline-year {
+            font-weight: bold;
+            color: var(--soviet-red);
+            font-size: 1.1rem;
+        }
+
+        /* КНИГА И ЦИТАТА */
+        .book-section {
+            background-color: #f5eedc;
+            border: 1px dashed #bdae8c;
+            padding: 20px;
+            margin-top: 30px;
+            position: relative;
+        }
+
+        .book-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            color: var(--text-color);
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        blockquote {
+            font-style: italic;
+            margin: 0;
+            color: #4e453e;
+            position: relative;
+        }
+
+        /* ИНТЕРАКТИВНАЯ КНОПКА */
+        .action-zone {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: var(--border-style);
+        }
+
+        .btn-past {
+            display: inline-block;
+            background-color: var(--soviet-red);
+            color: #fff;
+            text-decoration: none;
+            padding: 15px 35px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 2px solid #731c1c;
+            box-shadow: 0 4px 0 #591616;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            font-family: 'Roboto Slab', serif;
+        }
+
+        .btn-past:hover {
+            background-color: #b83333;
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #591616;
+        }
+
+        .btn-past:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+
+        .hint-text {
+            font-size: 0.85rem;
+            color: #555;
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        /* МУЗЫКАЛЬНЫЙ ПЛЕЕР */
+        .audio-notice {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(253, 250, 242, 0.9);
+            padding: 5px 10px;
+            font-size: 0.75rem;
+            border: 1px solid #c2b490;
+            color: #777;
+            pointer-events: none;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="canvas-particles"></canvas>
+
+<div class="container">
+    <header>
+        <div class="republic-tag">Узбекская ССР</div>
+        <h1>Боев Николай Николаевич</h1>
+        <div class="title-honor">Заслуженный учитель Узбекской ССР</div>
+    </header>
+
+    <main>
+        <div class="profile-section">
+            <div class="portrait-wrapper">
+                <img src="1780477171925.png" alt="Боев Николай Николаевич" class="portrait">
+            </div>
+            
+            <div class="biography-brief">
+                <div class="timeline-item">
+                    <div class="timeline-year">1899 — 1914 гг.</div>
+                    <p>Преданно и неуклонно трудился на ниве просвещения, работая в стенах школы.</p>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-year">С 1904 года</div>
+                    <p>Выдвинут на ответственную должность <strong>инспектора училища</strong>, успешно руководя учебным процессом и закладывая стандарты советского образования.</p>
+                </div>
+            </div>
+        </div>
+
+       <div class="book-section">
+            <div class="book-title">📖 Из литературного наследия:</div>
+            <blockquote>
+                Благодаря его фундаментальному труду <strong>«Воспоминания школьного работника»</strong>, для нас сохранились бесценные исторические факты, открывающие завесу над дальнейшей биографией школы и судьбами её воспитанников.
+            </blockquote>
+        </div>
+
+        <div class="action-zone">
+            <a href="https://character.ai/chat/tbdIs-4jRmbihFUaXQQFCG3hh67_KQHyeGyrHNIQ7NY" target="_blank" class="btn-past">
+                ☎️ Звонок в прошлое
+            </a>
+            <div class="hint-text">Нажмите, чтобы связаться с Николаем Николаевичем через чат-бот</div>
+        </div>
+    </main>
+</div>
+
+<div class="audio-notice" id="audioNotice">🎵 Музыка заиграет при первом клике по экрану</div>
+
+<audio id="bg-music" loop>
+    <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+    // --- ЧАСТИЦЫ НА ФОНЕ ---
+    const canvas = document.getElementById('canvas-particles');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    function initCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', initCanvas);
+    initCanvas();
+
+    class Particle {
+        constructor() { this.reset(); }
+        reset() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * canvas.height;
+            this.vx = (Math.random() - 0.5) * 0.4;
+            this.vy = (Math.random() - 0.5) * 0.4;
+            this.size = Math.random() * 2 + 1; // Слегка увеличен размер для видимости
+            this.alpha = Math.random() * 0.2 + 0.05;
+        }
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+            if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+            if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+        }
+        draw() {
+            ctx.fillStyle = `rgba(255, 255, 255, ${this.alpha})`; // Изменено на белый цвет для контраста с темным фоном
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    for (let i = 0; i < 70; i++) particles.push(new Particle());
+
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => { p.update(); p.draw(); });
+        requestAnimationFrame(animate);
+    }
+    animate();
+
+    // --- ЛОГИКА АВТОЗАПУСКА ЗВУКА ---
+    window.addEventListener('click', function() {
+        const audio = document.getElementById('bg-music');
+        const notice = document.getElementById('audioNotice');
+        
+        if (audio.paused) {
+            audio.volume = 0.2; 
+            audio.play().then(() => {
+                notice.style.display = 'none'; 
+            }).catch(error => {
+                console.log("Воспроизведение заблокировано:", error);
+            });
+        }
+    }, { once: true });
+</script>
+
+</body>
+</html>

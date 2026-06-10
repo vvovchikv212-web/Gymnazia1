@@ -1,0 +1,277 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Гимназия №1 имени Алихана Бокейханова</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* 1. БАЗОВЫЕ СТИЛИ */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #020617;
+            font-family: 'Montserrat', sans-serif;
+            color: #ffffff;
+        }
+
+        /* Анимированный фон (частицы) */
+        #canvas-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* ПОДЛОЖКА ДЛЯ РАЗБЛОКИРОВКИ ЗВУКА */
+        #audio-unlocker {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(2, 6, 23, 0.95);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .unlock-icon {
+            font-size: 50px;
+            color: #fbbf24;
+            margin-bottom: 20px;
+            animation: pulse-icon 1.5s infinite alternate ease-in-out;
+        }
+
+        .unlock-text {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-align: center;
+            color: #ffffff;
+            padding: 0 20px;
+        }
+
+        /* 2. ГЛАВНЫЙ КОНТЕЙНЕР */
+        .main-content {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: radial-gradient(circle at center, rgba(15, 23, 42, 0.4) 0%, rgba(2, 6, 23, 0.9) 100%);
+        }
+
+        /* 3. ШАПКА */
+        .school-header {
+            text-align: center;
+            max-width: 900px;
+            margin-bottom: 15px;
+        }
+
+        .header-text {
+            font-size: 12px;
+            color: #94a3b8;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .header-highlight {
+            display: block;
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(20px, 4vw, 30px);
+            color: #fbbf24;
+            margin: 5px 0;
+            text-shadow: 0 0 15px rgba(251, 191, 36, 0.2);
+        }
+
+        /* 4. УВЕЛИЧЕННЫЙ ВИДЕО-БОКС */
+        .video-box {
+            position: relative;
+            width: 100%;
+            max-width: 1000px;
+            max-height: 55vh; 
+            aspect-ratio: 16 / 9;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            border: 1px solid rgba(255,255,255,0.1);
+            background: #000;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* 5. КНОПКА ВОЙТИ */
+        .action-button {
+            margin-top: 25px;
+            padding: 15px 45px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #020617;
+            background: #fbbf24;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(251, 191, 36, 0.3);
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .action-button:hover {
+            background: #fff;
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(255, 255, 255, 0.2);
+        }
+
+        /* АНИМАЦИИ */
+        @keyframes pulse-icon {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(1.15); opacity: 1; }
+        }
+
+        .bg-glow {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(30, 58, 138, 0.2) 0%, transparent 70%);
+            filter: blur(80px);
+            z-index: 1;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="audio-unlocker" onclick="startIntroWithSound()">
+        <div class="unlock-icon">🔊</div>
+        <div class="unlock-text">Нажмите в любом месте экрана для запуска видео со звуком</div>
+    </div>
+
+    <div class="bg-glow" style="top: -100px; left: -100px;"></div>
+    <div class="bg-glow" style="bottom: -100px; right: -100px;"></div>
+
+    <canvas id="canvas-particles"></canvas>
+
+    <div class="main-content">
+        <header class="school-header">
+            <p class="header-text">Коммунальное государственное учреждение</p>
+            <h1 class="header-highlight">«Гимназия №1 имени Алихана Бокейханова»</h1>
+            <p class="header-text" style="font-size: 10px; opacity: 0.7;">отдела образования города Тараз</p>
+        </header>
+
+        <div class="video-box">
+            <video id="intro-vid" loop playsinline>
+                <source src="intro.mp4" type="video/mp4">
+            </video>
+        </div>
+
+        <button class="action-button" onclick="navigateToChronicle()">
+            Войти в летопись
+        </button>
+    </div>
+
+    <script>
+        // --- ЧАСТИЦЫ НА ФОНЕ ---
+        const canvas = document.getElementById('canvas-particles');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function initCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', initCanvas);
+        initCanvas();
+
+        class Particle {
+            constructor() { this.reset(); }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.4;
+                this.vy = (Math.random() - 0.5) * 0.4;
+                this.size = Math.random() * 2+1;
+                this.alpha = Math.random() * 0.5+0.2;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }
+            draw() {
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.alpha})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < 100; i++) particles.push(new Particle());
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // --- ЛОГИКА АВТОЗАПУСКА ЗВУКА И ВИДЕО ---
+        const video = document.getElementById('intro-vid');
+        const unlocker = document.getElementById('audio-unlocker');
+
+        function startIntroWithSound() {
+            // Скрываем приветственный слой
+            unlocker.style.opacity = '0';
+            unlocker.style.visibility = 'hidden';
+            
+            // Запускаем видео со звуком
+            video.muted = false;
+            video.play().catch((err) => {
+                console.log("Ошибка воспроизведения:", err);
+            });
+        }
+
+        // ЛОГИКА КНОПКИ ПЕРЕХОДА
+        function navigateToChronicle() {
+            const content = document.querySelector('.main-content');
+            content.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            content.style.opacity = '0';
+            content.style.transform = 'scale(1.03)';
+
+            setTimeout(() => {
+                window.location.href = 'istoria.html'; // Переход к основному файлу флипбука
+            }, 600);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,239 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Гимназия №1 имени Алихана Бокейханова</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* 1. БАЗОВЫЕ СТИЛИ */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #020617;
+            font-family: 'Montserrat', sans-serif;
+            color: #ffffff;
+        }
+
+        /* Анимированный фон (частицы) */
+        #canvas-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* 2. ГЛАВНЫЙ КОНТЕЙНЕР */
+        .main-content {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: radial-gradient(circle at center, rgba(15, 23, 42, 0.4) 0%, rgba(2, 6, 23, 0.9) 100%);
+        }
+
+        /* 3. ШАПКА */
+        .school-header {
+            text-align: center;
+            max-width: 900px;
+            margin-bottom: 15px;
+        }
+
+        .header-text {
+            font-size: 14px;
+            color: #94a3b8;
+            letter-spacing: 0.5px;
+            line-height: 1.6;
+        }
+
+        /* 4. УВЕЛИЧЕННЫЙ ВИДЕО-БОКС */
+        .video-box {
+            position: relative;
+            width: 100%;
+            max-width: 1000px;
+            max-height: 55vh; 
+            aspect-ratio: 16 / 9;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            border: 1px solid rgba(255,255,255,0.1);
+            background: #000;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* КОНТЕЙНЕР ДЛЯ КНОПОК (В ОДИН РЯД) */
+        .button-group {
+            display: flex;
+            flex-direction: row; /* Выстраивает кнопки в один ряд */
+            justify-content: center;
+            align-items: center;
+            gap: 20px; /* Отступ между кнопками */
+            margin-top: 25px;
+            z-index: 10;
+        }
+
+        /* 5. КНОПКИ */
+        .action-button {
+            padding: 15px 35px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #020617;
+            background: #fbbf24;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(251, 191, 36, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .action-button:hover {
+            background: #fff;
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(255, 255, 255, 0.2);
+        }
+
+        .bg-glow {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(30, 58, 138, 0.2) 0%, transparent 70%);
+            filter: blur(80px);
+            z-index: 1;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-glow" style="top: -100px; left: -100px;"></div>
+    <div class="bg-glow" style="bottom: -100px; right: -100px;"></div>
+
+    <canvas id="canvas-particles"></canvas>
+
+    <div class="main-content">
+        <header class="school-header">
+            <p class="header-text">22 апреля 1965 года был создан школьный музей «История школы». Это живая нить времени, связывающая поколения. Его главная задача — уберечь от забвения хрупкие осколки прошлого, превращая сухие исторические факты в трепетные воспоминания. Здесь, среди пожелтевших писем и старых фотографий, рождается искренняя любовь к истокам, а юные сердца учатся ценить, помнить и беречь великое наследие своего народа.</p>
+        </header>
+
+        <div class="video-box">
+            <video id="intro-vid" loop playsinline autoplay muted>
+                <source src="museum.mp4" type="video/mp4">
+            </video>
+        </div>
+
+        <div class="button-group">
+            <button class="action-button" onclick="navigateToChronicle()">
+                Первый руководитель
+            </button>
+            <button class="action-button" onclick="navigateToChronicle1()">
+                Становление школы
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- ЧАСТИЦЫ НА ФОНЕ ---
+        const canvas = document.getElementById('canvas-particles');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function initCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', initCanvas);
+        initCanvas();
+
+        class Particle {
+            constructor() { this.reset(); }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.4;
+                this.vy = (Math.random() - 0.5) * 0.4;
+                this.size = Math.random() * 1.5;
+                this.alpha = Math.random() * 0.5;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }
+            draw() {
+                ctx.fillStyle = `rgba(148, 163, 184, ${this.alpha})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < 100; i++) particles.push(new Particle());
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // --- АВТОМАТИЧЕСКОЕ ВКЛЮЧЕНИЕ ЗВУКА ПРИ КЛИКЕ ---
+        const video = document.getElementById('intro-vid');
+
+        window.addEventListener('click', function() {
+            if (video && video.muted) {
+                video.muted = false;
+            }
+        }, { once: true });
+
+        // --- ЛОГИКА КНОПОК ПЕРЕХОДА ---
+        function navigateToChronicle() {
+            const content = document.querySelector('.main-content');
+            content.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            content.style.opacity = '0';
+            content.style.transform = 'scale(1.03)';
+
+            setTimeout(() => {
+                window.location.href = 'boev.html';
+            }, 600);
+        }
+
+        function navigateToChronicle1() {
+            const content = document.querySelector('.main-content');
+            content.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            content.style.opacity = '0';
+            content.style.transform = 'scale(1.03)';
+
+            setTimeout(() => {
+                window.location.href = 'kayfman.html';
+            }, 600);
+        }
+    </script>
+</body>
+</html>
